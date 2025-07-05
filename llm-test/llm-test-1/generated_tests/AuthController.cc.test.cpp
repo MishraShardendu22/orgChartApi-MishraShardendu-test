@@ -129,4 +129,8 @@ TEST_F(AuthControllerTest, LoginUserWithNonExistentUser) {
 
 TEST_F(AuthControllerTest, LoginUserWithInvalidPassword) {
     User user("testuser", "wrongpassword");
-    EXPECT_CALL(mapper, findFutureBy(CompareOperator::EQ, std::string("username"), std::string("testuser
+    EXPECT_CALL(mapper, findFutureBy(CompareOperator::EQ, std::string("username"), std::string("testuser"))).WillOnce(Return(Future<std::vector<User>>(std::vector<User>(user))));
+    EXPECT_CALL(*dbClientPtr, getDbClient()).Times(1);
+    EXPECT_CALL(authController.isPasswordValid("wrongpassword", "hashed_password")).WillOnce(Return(false));
+
+    auto callback = [](const HttpResponsePtr &
