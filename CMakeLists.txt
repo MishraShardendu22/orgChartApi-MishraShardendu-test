@@ -35,10 +35,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE jwt-cpp)
 add_subdirectory(third_party/libbcrypt)
 target_link_libraries(${PROJECT_NAME} PRIVATE bcrypt)
 
-# and comment out the following lines
-find_package(Drogon CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon)
-
 # ##############################################################################
 
 if (CMAKE_CXX_STANDARD LESS 17)
@@ -75,19 +71,21 @@ target_sources(${PROJECT_NAME}
 # set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 
 # ##############################################################################
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 
 add_subdirectory(test)
 enable_testing()
 find_package(GTest REQUIRED)
 
-add_executable(${PROJECT_NAME}_test
+add_executable(${PROJECT_NAME}_tests
     test/test_main.cc
-    # add other test files here
+    # other generated test files will be auto-globbed in test/CMakeLists.txt
 )
 
-target_link_libraries(${PROJECT_NAME}_test
+target_link_libraries(${PROJECT_NAME}_tests
     PRIVATE GTest::gtest GTest::gtest_main pthread
 )
 
 include(GoogleTest)
-gtest_discover_tests(${PROJECT_NAME}_test)
+gtest_discover_tests(${PROJECT_NAME}_tests)

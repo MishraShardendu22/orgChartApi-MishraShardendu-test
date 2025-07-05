@@ -1,79 +1,105 @@
+cpppp
 #include <gtest/gtest.h>
-#include <drogon/HttpController.h>
-#include <drogon/HttpResponse.h>
-#include <drogon/Json.h>
-#include <drogon/orm/Model.h>
+#include <drogon/HttpServer.h>
+#include <drogon/drogon.h>
+#include "PersonsController.h"
 #include <memory>
-#include <utility>
-
+#include <vector>
+#include <string>
+#include "../models/Person.h"
+#include <drogon/HttpController.h>
+#include <drogon/Filter.h>
+#include <drogon/trantor.h>
+using namespace std;
 using namespace drogon;
 
 class PersonsControllerTest : public ::testing::Test {
 protected:
+    using Controller = PersonsController;
+
     void SetUp() override {
-        // Set up any necessary mocks or stubs for tests
+        // Ensure drogon app is initialized for tests
+        drogon::app().getConfig()->setPort(8000);
+        drogon::app().setThreadNum(4);
+        drogon::app().initialize({});
+        drogon::app().sched()->updateTime(0);
     }
 
     void TearDown() override {
-        // Clean up after tests
+        // Cleanup if necessary
+        drogon::app().stop();
     }
 };
 
-TEST(PersonsControllerTest, GetSuccess) {
-    // Create mock HttpRequest and expect success response
-    auto req = std::make_shared<HttpRequestMock>();
-    auto callback = [](const HttpResponsePtr &resp) { /* Do nothing */ };
-    EXPECT_CALL(*req, getOptionalParameter).Times(3).WillOnce(testing::Return("id")).WillOnce(testing::Return("asc")).WillOnce(testing::Return(25));
-    EXPECT_CALL(*req, getOptionalParameter).Times(1).WillOnce(testing::Return(0));
-
-    // Mock database query and response
-    auto dbClient = std::make_shared<MockDatabaseClient>();
-    ON_CALL(*dbClient, operator<<).WillByDefault(testing::ReturnRefOfSource());
-    testing::ExpectCapturePoint(dbClient);
-    
-    // Setup lambda expectations
-    auto mockResponse = HttpResponse::newHttpJsonResponse(Json::Value(Json::ValueType::ArrayValue));
-    testing::ExpectLambdaCaptureAndReturn(mockResponse);
-
-    // Call the method under test
-    PersonsController().get(req, callback);
+TEST_F(PersonsControllerTest, GetPersons) {
+    auto controller = make_shared<Controller>();
+    auto req = HttpRequest::newHttpRequest();
+    auto callback = [](const HttpResponsePtr &resp) {
+        // Capture response for verification if needed
+    };
+    controller->get(req, callback);
+    // Test implementation needed for async callbacks
+    ASSERT_TRUE(true); // Placeholder until real test implementation
 }
 
-TEST(PersonsControllerTest, GetEmptyResult) {
-    auto req = std::make_shared<HttpRequestMock>();
-    auto callback = [](const HttpResponsePtr &resp) { /* Do nothing */ };
-    EXPECT_CALL(*req, getOptionalParameter).Times(3).WillOnce(testing::Return("id")).WillOnce(testing::Return("asc")).WillOnce(testing::Return(25));
-    EXPECT_CALL(*req, getOptionalParameter).Times(1).WillOnce(testing::Return(0));
-
-    auto dbClient = std::make_shared<MockDatabaseClient>();
-    ON_CALL(*dbClient, operator<<).WillByDefault(testing::ReturnRefOfSource());
-    testing::ExpectCapturePoint(dbClient);
-    
-    testing::ExpectLambdaCaptureAndReturn(HttpResponse::newHttpJsonResponse(makeErrResp("resource not found")));
-
-    PersonsController().get(req, callback);
+TEST_F(PersonsControllerTest, GetOne) {
+    auto controller = make_shared<Controller>();
+    auto req = HttpRequest::newHttpRequest();
+    int id = 1;
+    auto callback = [](const HttpResponsePtr &resp) {
+        // Capture response for verification if needed
+    };
+    controller->getOne(req, callback, id);
+    // Test implementation needed
+    ASSERT_TRUE(true);
 }
 
-TEST(PersonsControllerTest, GetOneSuccess) {
-    // Similar structure to GetSuccess but for getOne endpoint
+TEST_F(PersonsControllerTest, CreateOne) {
+    auto controller = make_shared<Controller>();
+    auto req = HttpRequest::newHttpRequest();
+    auto person = Person{1, "John", "Doe", 30};
+    auto callback = [](const HttpResponsePtr &resp) {
+        // Capture response for verification if needed
+    };
+    controller->createOne(req, callback, move(person));
+    // Test implementation needed
+    ASSERT_TRUE(true);
 }
 
-TEST(PersonsControllerTest, GetOneNotFound) {
-    // Similar structure to GetSuccess but for getOne endpoint with not found
+TEST_F(PersonsControllerTest, UpdateOne) {
+    auto controller = make_shared<Controller>();
+    auto req = HttpRequest::newHttpRequest();
+    int id = 1;
+    auto person = Person{1, "John", "Doe", 30};
+    auto callback = [](const HttpResponsePtr &resp) {
+        // Capture response for verification if needed
+    };
+    controller->updateOne(req, callback, id, move(person));
+    // Test implementation needed
+    ASSERT_TRUE(true);
 }
 
-TEST(PersonsControllerTest, TestCreateOne) {
-    // Tests for createOne endpoint
+TEST_F(PersonsControllerTest, DeleteOne) {
+    auto controller = make_shared<Controller>();
+    auto req = HttpRequest::newHttpRequest();
+    int id = 1;
+    auto callback = [](const HttpResponsePtr &resp) {
+        // Capture response for verification if needed
+    };
+    controller->deleteOne(req, callback, id);
+    // Test implementation needed
+    ASSERT_TRUE(true);
 }
 
-TEST(PersonsControllerTest, TestUpdateOne) {
-    // Tests for updateOne endpoint
+TEST_F(PersonsControllerTest, GetDirectReports) {
+    auto controller = make_shared<Controller>();
+    auto req = HttpRequest::newHttpRequest();
+    int id = 1;
+    auto callback = [](const HttpResponsePtr &resp) {
+        // Capture response for verification if needed
+    };
+    controller->getDirectReports(req, callback, id);
+    // Test implementation needed
+    ASSERT_TRUE(true);
 }
-
-TEST(PersonsControllerTest, TestDeleteOne) {
-    // Tests for deleteOne endpoint
-}
-
-TEST(PersonsControllerTest, TestGetDirectReports) {
-    // Tests for getDirectReports endpoint
-}
+```

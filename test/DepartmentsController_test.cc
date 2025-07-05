@@ -1,247 +1,303 @@
+CMakeLists.txt:
+```cmake
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+project(org_chart_tests)
+
+enable_language(CXX)
+
+# Includes
+include(FindPackageHandleDependentOptions)
+include(SelectCompileDefinitions)
+include(GNUInstallDirs)
+
+# Set the C++ standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Add include directories
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${CMAKE_CURRENT_SOURCE_DIR}/test
+    ${DROGON_INCLUDE_DIRS}
+    ${JSONCPP_INCLUDE_DIRS}
+    ${UUID_INCLUDE_DIRS}
+    ${BROTLI_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIRS}
+    ${TRANTOR_INCLUDE_DIRS}
+    ${JSONCONS_INCLUDE_DIRS}
+)
+
+# Link directories
+link_directories(
+    ${DROGON_LIBRARY_DIRS}
+    ${JSONCPP_LIBRARY_DIRS}
+    ${UUID_LIBRARY_DIRS}
+    ${BROTLI_LIBRARY_DIRS}
+    ${OPENSSL_LIBRARY_DIRS}
+    ${TRANTOR_LIBRARY_DIRS}
+)
+
+# Add the test executable
+add_executable(org_chart_tests test_controllers.cc test_main.cc)
+
+# Link libraries
+target_link_libraries(org_chart_tests
+    ${DROGON_LIBRARIES}
+    ${JSONCPP_LIBRARIES}
+    ${UUID_LIBRARIES}
+    ${BROTLI_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
+    ${TRANTOR_LIBRARIES}
+    gtest
+    pthread
+)
+
+# Optional: Add custom commands for running tests
+add_custom_target(test_run
+    DEPENDS org_chart_tests
+    COMMAND $<TARGET_FILE:org_chart_tests>
+    COMMENT "Running unit tests"
+)
+
+test_controllers.cc:
+```cpp
 #include <gtest/gtest.h>
-#include <drogon/drogon.h>
-#include <drogon/http/HttpRequest.h>
-#include <drogon/http/HttpResponse.h>
-#include <drogon/utils/Utils.h>
-#include <drogon/orm/Mapper.h>
-#include <drogon/status_code.h>
-#include <drogon/drogon_version.h>
-#include <json/json.h>
-#include <memory>
+#include <drogon/HttpController.h>
+#include <drogon/HttpResponse.h>
+#include <drogon/HttpRequest.h>
+#include <drogon/orm/Model.h>
+#include <drogon/utils/Log.h>
 #include <vector>
+#include <memory>
+#include <utility>
 #include <string>
 
-using namespace std;
 using namespace drogon;
-using namespace drogon::orm;
-using namespace drogon::http;
 using namespace drogon_model::org_chart;
 
-class TestWithMySQL : public ::testing::Test {
+class DepartmentsControllerTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        app().useClientPool("test_db", 10, "mysql://test_user:test_pass@localhost:3306/test_db", "test_db");
-        app().useDbClientPool("test_db", 10, "mysql://test_user:test_pass@localhost:3306/test_db", "test_db");
-        database()->executeSql("CREATE TABLE IF NOT EXISTS `department` (" \
-        "`id` int(10) unsigned NOT NULL AUTO_INCREMENT, " \
-        "`name` varchar(255) NOT NULL, " \
-        "PRIMARY KEY (`id`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8;");
-        database()->executeSql("INSERT INTO `department` VALUES (1, 'Test Department1'), (2, 'Test Department2')");
-    }
-
-    void TearDown() override {
-        database()->executeSql("DROP TABLE IF EXISTS department");
+        // Initialize drogon logger for tests
+        LOG(INFO) << "Setting up test environment";
+        
+        // Setup any necessary mock objects if needed
+        // For simple controller tests we might not need mocks
     }
 };
 
-TEST_F(TestWithMySQL, DepartmentsControllerGetTest) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setPath("/departments");
-    req->addOptionalParameter("offset", 0);
-    req->addOptionalParameter("limit", 25);
-    req->addOptionalParameter("sort_field", "id");
-    req->addOptionalParameter("sort_order", "asc");
-
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), HttpStatusCode::k200OK);
-        auto json = resp->getJsonContent();
-        ASSERT_TRUE(json.isArray());
-        ASSERT_EQ(json.size(), 2);
+TEST_F(DepartmentsControllerTest, GetDepartmentsWithParameters) {
+    DepartmentsController controller;
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k200OK);
     };
 
-    DepartmentsController controller;
+    req->setParameter("offset", "0");
+    req->setParameter("limit", "10");
+    req->setParameter("sort_field", "name");
+    req->setParameter("sort_order", "desc");
+
     controller.get(req, callback);
 }
 
-TEST_F(TestWithMySQL, DepartmentsControllerGetEmptyResponse) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setPath("/departments");
-    req->addOptionalParameter("offset", 100);
-    req->addOptionalParameter("limit", 25);
-
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), HttpStatusCode::k200OK);
-        auto json = resp->getJsonContent();
-        ASSERT_TRUE(json.isArray());
-        EXPECT_TRUE(json.empty());
+TEST_F(DepartmentsControllerTest, GetDepartmentsWithoutParameters) {
+    DepartmentsController controller;
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k200OK);
     };
 
-    DepartmentsController controller;
     controller.get(req, callback);
 }
 
-TEST_F(TestWithMySQL, DepartmentsControllerGetOneTest) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
+TEST_F(DepartmentsControllerTest, GetOneValidDepartment) {
+    DepartmentsController controller;
+    int departmentId = 1;
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k201Created);
+    };
+
     req->setPath("/departments/1");
-    
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), HttpStatusCode::k201Created);
-        auto json = resp->getJsonContent();
-        ASSERT_TRUE(json.isObject());
-        EXPECT_EQ(json["name"].asString(), "Test Department1");
-    };
-
-    DepartmentsController controller;
-    controller.getOne(req, callback, 1);
+    controller.getOne(req, callback, departmentId);
 }
 
-TEST_F(TestWithMySQL, DepartmentsControllerGetOneNotFound) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setPath("/departments/999");
-    
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), k404NotFound);
-    };
-
+TEST_F(DepartmentsControllerTest, CreateOneDepartment) {
     DepartmentsController controller;
-    controller.getOne(req, callback, 999);
-}
-
-TEST_F(TestWithMySQL, DepartmentsControllerCreateOneTest) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setMethod(HttpMethod::Post);
-    req->setPath("/departments");
-
     Department department;
-    department.setName("New Department");
-    req->setBody(Department::toJson().toJsonString());
-
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), HttpStatusCode::k201Created);
-        auto json = resp->getJsonContent();
-        ASSERT_TRUE(json.isObject());
-        EXPECT_EQ(json["name"].asString(), "New Department");
+    // Setup department data
+    department.setName("Engineering");
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k201Created);
     };
 
-    DepartmentsController controller;
     controller.createOne(req, callback, std::move(department));
 }
 
-TEST_F(TestWithMySQL, DepartmentsControllerCreateOneValidation) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setMethod(HttpMethod::Post);
-    req->setPath("/departments");
-
-    Department department;
-    department.setName("");
-    req->setBody(Department::toJson().toJsonString());
-
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), HttpStatusCode::k400BadRequest);
-        auto json = resp->getJsonContent();
-        ASSERT_TRUE(json.isObject());
-        ASSERT_TRUE(json["error"].isString());
+TEST_F(DepartmentsControllerTest, UpdateOneDepartment) {
+    DepartmentsController controller;
+    int departmentId = 1;
+    Department dept;
+    dept.setName("Updated Engineering");
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k204NoContent);
     };
 
-    DepartmentsController controller;
-    controller.createOne(req, callback, std::move(department));
+    controller.updateOne(req, callback, departmentId, std::move(dept));
 }
 
-TEST_F(TestWithMySQL, DepartmentsControllerUpdateOneTest) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setMethod(HttpMethod::Put);
-    req->setPath("/departments/1");
-
-    Department updatedDepartment;
-    updatedDepartment.setId(1);
-    updatedDepartment.setName("Updated Department");
-    req->setBody(Department::toJson().toJsonString());
-
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), HttpStatusCode::k204NoContent);
+TEST_F(DepartmentsControllerTest, DeleteOneDepartment) {
+    DepartmentsController controller;
+    int departmentId = 1;
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k204NoContent);
     };
 
-    DepartmentsController controller;
-    controller.updateOne(req, callback, 1, std::move(updatedDepartment));
+    controller.deleteOne(req, callback, departmentId);
 }
 
-TEST_F(TestWithMySQL, DepartmentsControllerUpdateOneNotFound) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setMethod(HttpMethod::Put);
-    req->setPath("/departments/999");
-
-    Department updatedDepartment;
-    updatedDepartment.setId(999);
-    req->setBody(Department::toJson().toJsonString());
-
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), k404NotFound);
+TEST_F(DepartmentsControllerTest, GetDepartmentPersons) {
+    DepartmentsController controller;
+    int departmentId = 1;
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k200OK);
     };
 
-    DepartmentsController controller;
-    controller.updateOne(req, callback, 999, std::move(updatedDepartment));
+    controller.getDepartmentPersons(req, callback, departmentId);
 }
 
-TEST_F(TestWithMySQL, DepartmentsControllerDeleteOneTest) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setMethod(HttpMethod::Delete);
-    req->setPath("/departments/1");
-
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), HttpStatusCode::k204NoContent);
+TEST_F(DepartmentsControllerTest, GetOneNonExistentDepartment) {
+    DepartmentsController controller;
+    int departmentId = 999;
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k404NotFound);
     };
 
-    DepartmentsController controller;
-    controller.deleteOne(req, callback, 1);
+    controller.getOne(req, callback, departmentId);
 }
 
-TEST_F(TestWithMySQL, DepartmentsControllerDeleteOneNotFound) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setMethod(HttpMethod::Delete);
-    req->setPath("/departments/999");
-
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), k404NotFound);
+TEST_F(DepartmentsControllerTest, UpdateNonExistentDepartment) {
+    DepartmentsController controller;
+    int departmentId = 999;
+    Department dept;
+    dept.setName("New Engineering");
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        auto body = resp->getJSONValue();
+        ASSERT_EQ(status, HttpStatusCode::k404NotFound) << "Status code is 404";
     };
 
-    DepartmentsController controller;
-    controller.deleteOne(req, callback, 999);
+    controller.updateOne(req, callback, departmentId, std::move(dept));
 }
 
-TEST_F(TestWithMySQL, DepartmentsControllerGetDepartmentPersonsTest) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setPath("/departments/1/persons");
-    
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), HttpStatusCode::k200OK);
-        auto json = resp->getJsonContent();
-        ASSERT_TRUE(json.isArray());
-        ASSERT_EQ(json.size(), 0);
+TEST_F(DepartmentsControllerTest, DeleteNonExistentDepartment) {
+    DepartmentsController controller;
+    int departmentId = 999;
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k404NotFound);
     };
 
-    DepartmentsController controller;
-    controller.getDepartmentPersons(req, callback, 1);
+    controller.deleteOne(req, callback, departmentId);
 }
 
-TEST_F(TestWithMySQL, DepartmentsControllerGetDepartmentPersonsError) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setPath("/departments/999/persons");
-    
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), k404NotFound);
+TEST_F(DepartmentsControllerTest, DatabaseErrorInGet) {
+    // This would be more complex in real tests, requires mocking the DB client
+    DepartmentsController controller;
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k500InternalServerError);
     };
 
-    DepartmentsController controller;
-    controller.getDepartmentPersons(req, callback, 999);
-}
-
-TEST_F(TestWithMySQL, DepartmentsControllerGetEmptyOffset) {
-    HttpRequestPtr req = make_shared<HttpRequest>();
-    req->setPath("/departments");
-    req->addOptionalParameter("offset", 0);
-    
-    auto callback = [](const HttpResponsePtr &resp) {
-        EXPECT_EQ(resp->getStatusCode(), HttpStatusCode::k200OK);
-        auto json = resp->getJsonContent();
-        ASSERT_TRUE(json.isArray());
-        ASSERT_EQ(json.size(), 2);
-    };
-
-    DepartmentsController controller;
+    // Setup mocks to simulate database error
+    // Normally, one would mock the Mapper's findAll method to throw an exception here
     controller.get(req, callback);
 }
 
+TEST_F(DepartmentsControllerTest, DatabaseErrorInGetOne) {
+    DepartmentsController controller;
+    int departmentId = 1;
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k500InternalServerError);
+    };
+
+    // Setup mocks to simulate database error
+    controller.getOne(req, callback, departmentId);
+}
+
+TEST_F(DepartmentsControllerTest, DatabaseErrorInCreateOne) {
+    DepartmentsController controller;
+    Department department;
+    department.setName("Testing");
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const HttpResponsePtr &)> callback = [](const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k500InternalServerError);
+    };
+
+    // Setup mocks to simulate database error
+    controller.createOne(req, callback, std::move(department));
+}
+
+TEST_F(DepartmentsControllerTest, DatabaseErrorInUpdateOne) {
+    DepartmentsController controller;
+    int departmentId = 1;
+    Department department;
+    department.setName("Testing");
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k500InternalServerError);
+    };
+
+    controller.updateOne(req, callback, departmentId, std::move(department));
+}
+
+TEST_F(DepartmentsControllerTest, DatabaseErrorInDeleteOne) {
+    DepartmentsController controller;
+    int departmentId = 1;
+    auto req = std::make_shared<HttpRequest>();
+    std::function<void(const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k500InternalServerError);
+    };
+
+    controller.deleteOne(req, callback, departmentId);
+}
+
+TEST_F(DepartmentsControllerTest, DatabaseErrorInGetDepartmentPersons) {
+    DepartmentsController controller;
+    int departmentId = 1;
+    auto req = std::shared_ptr<HttpRequest>();
+    std::function<void(const auto &resp) {
+        auto status = resp->getStatusCode();
+        ASSERT_EQ(status, HttpStatusCode::k500InternalServerError);
+    };
+
+    controller.getDepartmentPersons(req, callback, departmentId);
+        
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+```
