@@ -129,4 +129,4 @@ TEST_F(AuthControllerTest, LoginUserWithNonExistentUser) {
 
 TEST_F(AuthControllerTest, LoginUserWithInvalidPassword) {
     User user("testuser", "wrongpassword");
-    EXPECT
+    EXPECT_CALL(mapper, findFutureBy(CompareOperator::EQ, std::string("username"), std::string("testuser
