@@ -21,7 +21,7 @@ void LoginFilter::doFilter(const HttpRequestPtr &req, FilterCallback &&fcb, Filt
         auto decoded = jwt.decode(token);
         auto userId = stoi(decoded.get_payload_claim("user_id").as_string());
         fccb();
-    } catch (jwt::token_verification_exception &e) {
+    } catch (const std::exception &e) {
         auto resp = drogon::HttpResponse::newHttpResponse();
         LOG_ERROR << e.what();
         resp->setStatusCode(k400BadRequest);

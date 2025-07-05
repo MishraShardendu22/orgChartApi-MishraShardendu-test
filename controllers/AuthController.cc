@@ -1,4 +1,4 @@
-#include <third_party/libbcrypt/include/bcrypt/BCrypt.hpp>
+#include <libbcrypt/include/bcrypt/BCrypt.hpp>
 #include "AuthController.h"
 #include "../plugins/JwtPlugin.h"
 
