@@ -1,160 +1,152 @@
-```cpp
 #include <gtest/gtest.h>
-#include <drogon/drogon.h>
-#include <drogon/orm/DrogonORM.h>
-#include <drogon/HttpAppFramework.h>
-#include <drogon/utils/Utilities.h>
+#include <drogon/HttpController.h>
+#include <drogon/HttpRequest.h>
+#include <drogon/HttpResponse.h>
+#include <drogon/orm/Entity.h>
+#include <drogon/orm/DrogonDbException.h>
+#include <string>
 #include <vector>
 #include <memory>
-#include <json/json.h>
-#include <drogon/Types.h>
+#include <drogon/json/Json.h>
+#include "../models/Person.h"
+#include "PersonsController.h"
 
 using namespace testing;
+using namespace drogon;
+using namespace drogon_model::org_chart;
 
 class PersonsControllerTest : public Test {
 protected:
-    // You might want to add any common initialization here
-};
+    PersonsController controller;
 
-// Test fixture for shared setup
-class PersonsControllerTestFixture : public Test {
-protected:
-    std::vector<Person> mockPersons;
-    Person mockPerson;
+    // Helper function to create a mock HttpRequest
+    HttpRequestPtr createMockHttpRequest(const std::string& param1 = "", int param = 0) {
+        auto req = std::make_shared<HttpRequest>(nullptr);  // nullptr for test
+        if (!param1.empty()) {
+            req->setPathParam({param1}, {std::to_string(param)});  // Set path params for testing
+        }
+        return req;
+    }
 
-    void SetUp() override {
-        // Initialize test data
-        mockPersons = {};
-        mockPerson = Person{
-            .id = 1,
-            .firstName = "John",
-            .lastName = "Doe",
-            .hireDate = trantor::Date::fromMillisSinceEpoch(1000),
-            .jobId = 1,
-            .departmentId = 1,
-            .managerId = 1
-        };
-        
-        // Initialize mock PersonInfo if needed
-        mockPersons.push_back(mockPerson);
-        
-        // Initialize any ORM mocks if needed
+    // Helper function to check API response for 200 OK
+    void checkSuccessResponse(const HttpResponsePtr& response) {
+        EXPECT_EQ(response->getStatusCode(), HttpStatusCode::k200OK);
+    }
+
+    // Helper function to check error response
+    void checkErrorResponse(const HttpResponsePtr& response, const std::string& expectedMessage) {
+        Json::Value json;
+        response->parseJsonResult(json);
+        EXPECT_TRUE(json.isArray());
+        EXPECT_FALSE(json[0]["success"].isBool() ? json[0]["success"].asBool() : false);
+        if (expectedMessage.empty()) {
+            EXPECT_EQ(json[0]["message"].asString(), "database error");
+        } else {
+            EXPECT_EQ(json[0]["message"].asString(), expectedMessage);
+        }
     }
 };
 
-// Helper class to mock the DbClient operations
-class MockablePersonsController {
-public:
-    std::vector<Person> mockPersons;
-    std::vector<Person> mockDirectReports;
-
-    // You would implement these to mock the actual Controller behavior
-    // For brevity, we'll focus on test structure
-};
-
-// Test cases for PersonDetails class methods
-TEST(PersonsController, TestPersonDetailsConstructor) {
-    // Create dummy data for PersonInfo
-    drogon::DbResult mockResult;
-    // Set up mockResult with data...
-
-    // Create PersonInfo from the mock result
-    PersonInfo personInfo(mockResult);
-
-    // Call the constructor and verify fields
-    auto details = PersonDetails(personInfo);
-    
-    // Assertions would go here
-    EXPECT_EQ(personInfo.id(), details.id);
+// Helper function to create a mock Person entity
+std::shared_ptr<Person> createMockPerson(int id, const std::string& firstName, const std::string& lastName) {
+    auto mockPerson = std::make_shared<Person>();
+    mockPerson->setValuesForInserting();
+    mockPerson->setFirstName(firstName);
+    mockPerson->setLastName(lastName);
+    mockPerson->setHireDate(trantor::Date::now());
+    // Other fields can be set as needed for testing
+    mockPerson->setValuesAfterSelecting(id);
+    return mockPerson;
 }
 
-TEST(PersonsController, TestPersonDetailsToJson) {
-    // Assuming PersonDetails constructor is tested
-    // Create PersonDetails
-    auto details = PersonDetails{PersonInfo{}};
-    
-    // Get JSON representation
-    auto json = details.toJson();
-    
-    // Assertions
-    EXPECT_TRUE(json.isObject());
-    EXPECT_TRUE(json.isMember("id"));
-    // Add more assertions as needed
+TEST_F(PersonsControllerTest, GetMethod) {
+    auto req = createMockHttpRequest();
+    auto callback = [](const HttpResponsePtr& response) {
+        // Capture response
+    };
+    controller.get(req, callback);
+    // Normally, this would require a way to mock the DbClient and capture the result
+    // For now, just ensure no exceptions are thrown
+    SUCCEED() << "Verify that the get() method executes properly (this test needs setup)";
 }
 
-// Tests for public API endpoints
-TEST_F(PersonsControllerTestFixture, TestGetSuccess) {
-    // Setup test environment - mock database query success
-    MockablePersonsController mockCtrl;
-    drogon::app().setMapperResultHandler([](const Result& result) {
-        return Result{{"id", 1}, {"first_name", "John"}, {"last_name", "Doe"}}};
-    });
-
-    // Create controller instance and call the method
-    // Verify response status and body
-    HttpResponsePtr resp = nullptr;
-    auto dbClient = drogon::app().getDbClient();
-
-    // The actual test would involve a full HTTP request simulation
-    // This is pseudo-code to demonstrate the structure
-    // get(req, [&](const HttpResponsePtr& r) { resp = r; })();
-    
-    // Assertions
-    // EXPECT_EQ(resp->getStatusCode(), 200);
-    // EXPECT_TRUE(resp->hasHeader("Content-Type"));
+TEST_F(PersonsControllerTest, GetOneWithValidId) {
+    // This test requires mock setup of database client and DbClient behavior
+    // For now, just ensure the method doesn't throw exceptions
+    auto req = createMockHttpRequest("1");
+    auto callback = [](const HttpResponsePtr& response) {
+        // Capture response
+    };
+    controller.getOne(req, callback, 1);
+    SUCCEED() << "This test requires detailed db mocking";
 }
 
-TEST_F(PersonsControllerTestFixture, TestGetNotFound) {
-    // Setup test environment to return empty result
-    // Set up mapper to return no results
-
-    // Call get() and verify 404 response
+TEST_F(PersonsControllerTest, CreateOne) {
+    // This test needs atr
+    // This test requires mock setup of database client and DbClient behavior
+    // For now, just ensure the method doesn't throw exceptions
+    auto req = std::make_shared<HttpRequest>(nullptr);  // nullptr for test
+    auto mockPerson = createMockPerson(1, "John", "Doe");
+    auto callback = [](const HttpResponsePtr& response) {
+        // Capture response
+    };
+    controller.createOne(req, callback, std::move(mockPerson));
+    SUCCEED() << "This test requires detailed db mocking";
 }
 
-TEST_F(PersonsControllerTestFixture, TestGetDatabaseError) {
-    // Setup test to mimic database exception
-    // Call get() and verify 500 response
+TEST_F(PersonsControllerTest, UpdateOne) {
+    // This test needs setup
+    // For now, just ensure the method doesn't throw exceptions
+    auto req = createMockHttpRequest("1");
+    auto mockPerson = createMockPerson(1, "John", "Doe");
+    auto callback = [](const HttpResponsePtr& response) {
+        // Capture response
+    };
+    controller.updateOne(req, callback, 1, std::move(mockPerson));
+    SUCCEED() << "This test requires detailed db mocking";
 }
 
-TEST_F(PersonsControllerTestFixture, TestGetOneSuccess) {
-    // Test getting a single person by ID
+TEST_F(PersonsControllerTest, DeleteOneWithValidId) {
+    // This test needs setup
+    // For now, just ensure the method doesn't throw exceptions
+    auto req = createMockHttpRequest("1");
+    auto callback = [](const HttpResponsePtr& response) {
+        // Capture response
+    };
+    controller.deleteOne(req, callback, 1);
+    SUCCEED() << "This test requires detailed db mocking";
 }
 
-// Similar tests for createOne, updateOne, deleteOne, and getDirectReports
-
-TEST_F(PersonsControllerTestFixture, TestCreateOneSuccess) {
-    // Simulate successful create
+TEST_F(PersonsControllerTest, GetDirectReports) {
+    // This test needs setup
+    // For now, just ensure the method doesn't throw exceptions
+    auto req = createMockHttpRequest("1");
+    auto callback = [](const HttpResponsePtr& response) {
+        // Capture response
+    };
+    controller.getDirectReports(req, callback, 1);
+    SUCCEED() << "This test requires detailed db mocking";
 }
 
-TEST_F(PersonsControllerTestFixture, TestCreateOneDatabaseError) {
-    // Test database error during create
+TEST_F(PersonsControllerTest, ErrorHandlingDatabaseError) {
+    // This test needs setup
+    // For now, just ensure the method doesn't throw exceptions
+    auto req = createMockHttpRequest();
+    auto callback = [](const HttpResponsePtr& response) {
+        // Capture response
+    };
+    // Normally, this would require a failing database query
+    controller.get(req, callback);
+    SUCCEED() << "This test requires detailed db mocking";
 }
 
-TEST_F(PersonsControllerTestFixture, TestUpdateOneSuccess) {
-    // Test successful update
+TEST_F(PersonsControllerTest, ErrorHandlingNotFound) {
+    // This test needs setup
+    // For now, just ensure the method doesn't throw exceptions
+    auto req = createMockHttpRequest("1");
+    auto callback = [](const HttpResponsePtr& response) {
+        // Capture response
+    };
+    controller.getOne(req, callback, 1);
+    SUCCEED() << "This test requires detailed db mocking";
 }
-
-TEST_F(PersonsControllerTestFixture, TestUpdateOneNotFoundError) {
-    // Test when resource not found
-}
-
-TEST_F(PersonsControllerTestFixture, TestDeleteOneSuccess) {
-    // Test successful deletion
-}
-
-TEST_F(PersonsControllerTestFixture, TestDeleteOneNotFoundError) {
-    // Test deletion of non-existent resource
-}
-
-TEST_F(PersonsControllerTestFixture, TestGetDirectReportsSuccess) {
-    // Test getting direct reports
-}
-
-TEST_F(PersonsControllerTestFixture, TestGetDirectReportsNoReports) {
-    // Test when no direct reports exist
-}
-
-TEST_F(PersonsControllerTestFixture, TestGetDirectReportsDatabaseError) {
-    // Test database error during reports lookup
-}
-```

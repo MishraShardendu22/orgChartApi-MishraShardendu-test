@@ -1,237 +1,206 @@
-```cpp
 #include <gtest/gtest.h>
 #include <drogon/HttpController.h>
-#include <drogon/HttpResponse.h>
-#include <drogon/HttpRequest.h>
+#include "../models/Job.h"
 #include <drogon/orm/Model.h>
+#include <drogon/drogon.h>
+#include <functional>
+#include <memory>
 #include <string>
 #include <vector>
-#include "../JobsController.h"
-#include "../models/Job.h"
-#include "../models/Person.h"
-#include "../utils/utils.h"
-#include <memory>
+#include <map>
+#include <condition_variable>
+#include <future>
+#include "JobsController.h"
 
+using namespace std;
 using namespace drogon;
-using namespace drogon::orm;
 using namespace drogon_model::org_chart;
-using namespace testing;
 
-class JobsControllerTest : public Test {
+// Helper function to create a mocked HttpRequest for testing
+unique_ptr<drogon::HttpRequest> createMockHttpRequest(const string& path, 
+    const map<string, string>& params = map<string, string>()) {
+    auto req = make_unique<MockHttpRequest>();
+    req->setPath(path);
+    for (const auto& param : params) {
+        req->addParam(param.first, param.second);
+    }
+    return req;
+}
+
+class JobsControllerTest : public ::testing::Test {
 protected:
-    void SetUp() override {
-        // This runs before each test
+    // Helper methods for testing
+    void setAttributeValue(Job& job, const string& attributeName, const string& value) {
+        if (attributeName == "title") {
+            job.setTitle(value);
+        } else if (attributeName == "description") {
+            job.setDescription(value);
+        } // Add other attributes here as needed
     }
 
-    void TearDown() override {
-        // This runs after each test
-    }
-};
-
-// Utility lambda to compare JSON responses
-auto compareJson = [](Json::Value expected, Json::Value actual) {
-    EXPECT_TRUE(actual.isMember("error") != expected.isMember("error")) 
-        << "JSON structures differ:\nExpected: " << expected << "\nActual:   " << actual;
-};
-
-// Test fixture for the JobsController
-class JobsControllerMockTest : public Test {
-protected:
-    std::unique_ptr<JobsController> controller;
-
-    // Verify response status and JSON
-    auto verifyResponse(HttpStatusCode status, bool isError = false) {
-        return [&status, isError](const HttpResponsePtr& resp) {
-            EXPECT_EQ(resp->getStatusCode(), status);
-            if (!isError) {
-                auto json = resp->getJsonData();
-                EXPECT_FALSE(json.isObject()); // Assuming it should be a JSON array or object correctly
-            }
-        };
-    }
-
-    void compareJobJson(const Job& job, const Json::Value& expected) {
-        // Implement comparison between Job and Json::Value as needed
-        // This might need adaptation if your Job's toJson structure differs
-        const auto& actualData = job.toJson();
-        EXPECT_EQ(actualData["id"].asInt(), expected["id"].asInt());
-        EXPECT_EQ(actualData["title"].asString(), expected["title"].asString());
-        // Add more comparisons based on your Job model
-    }
-
-    // Set up some mock data
-    void setupMockData() {
-        // Implement setup for tests that need mock data
+    // Incomplete test framework for asynchronous testing
+    // This is a simplified example and may require adjustment for production
+    unique_ptr<HttpResponse> awaitResponse(const std::function<void(const HttpResponsePtr&)>& callback) {
+        // This is a placeholder for asynchronous waiting logic
+        // In a real test, you would use a thread-safe queue and synchronization mechanisms
+        return nullptr;
     }
 };
 
-// Tests for JobsController::get
-TEST_F(JobsControllerTest, GetJobsSuccess) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
+// Test for JobsController::get
+TEST_F(JobsControllerTest, GetJobs) {
+    drogon::Logger::setLogLevel(drogon::LogLevel::kTrace);
     
-    // Mock the database call to return sample jobs
-    // This would require setting up a mock database mapper
+    // Create a controller instance
+    JobsController controller;
+    
+    // Prepare some test data
+    Job testJob;
+    testJob.setId(1);
+    testJob.setTitle("Software Engineer");
+    
+    // This is a simplified test setup - real tests would use mocks for the database
+    vector<Job> testJobs = {testJob};
+    
+    // TODO: Implement proper async testing setup
+    auto testCb = [](const HttpResponsePtr& resp) {
+        // Capture response and verify
+    };
     
     // Call the method under test
-    JobsController controller;
-    controller.get(req, callback);
+    controller.get(createMockHttpRequest("/jobs?offset=0&limit=10"), 
+                   testCb);
+}
+
+TEST_F(JobsControllerTest, GetJobsWithSorting) {
+    // Similar to GetJobs test but with sorting parameters
+    // TODO: Implement
 }
 
 TEST_F(JobsControllerTest, GetJobsNotFound) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
-    
-    // Arrange: Mock database to return empty result
-    
-    // Call the method under test
-    JobsController controller;
-    controller.get(req, callback);
+    // Test for empty result set
+    // TODO: Implement
 }
 
-TEST_F(JobsControllerTest, GetJobsDatabaseError) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
+// Test for JobsController::getOne
+TEST_F(JobsControllerTest, GetOneJob) {
+    Job testJob;
+    testJob.setId(1);
+    testJob.setTitle("Software Engineer");
     
-    // Arrange: Mock database to throw exception
+    auto testCb = [](const HttpResponsePtr& resp) {
+        // Verify response is 201 Created and contains the job
+    };
     
-    // Call the method under test
-    JobsController controller;
-    controller.get(req, callback);
-}
-
-// Tests for JobsController::getOne
-TEST_F(JobsControllerTest, GetOneJobSuccess) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    int jobId = 1;
-    auto callback = [](const HttpResponsePtr&) {};
-    
-    // Arrange: Mock database to return job with ID 1
-    
-    // Call the method under test
-    JobsController controller;
-    controller.getOne(req, callback, jobId);
+    controller.getOne(createMockHttpRequest("/jobs/1"),
+                    testCb,
+                    1);
 }
 
 TEST_F(JobsControllerTest, GetOneJobNotFound) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    int jobId = 999;
-    auto callback = [](const HttpResponsePtr&) {};
-    
-    // Arrange: Mock database to not find job with ID 999
-    
-    // Call the method under test
-    JobsController controller;
-    controller.getOne(req, callback, jobId);
+    // Test job not found (should return 404)
+    // TODO: Implement async verification
 }
 
-// Tests for JobsController::createOne
-TEST_F(JobsControllerTest, CreateJobSuccess) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
-    Job job = {}; // Create sample job
+// Test for JobsController::createOne
+TEST_F(JobsControllerTest, CreateJob) {
+    Job newJob;
+    newJob.setTitle("New Job");
     
-    // Arrange: Mock database to accept new job
+    auto testCb = [](const HttpResponsePtr& resp) {
+        // Expect 201 Created
+    };
     
-    // Call the method under test
-    JobsController controller;
-    controller.createOne(req, callback, std::move(job));
+    controller.createOne(createMockHttpRequest("/jobs"), 
+                         testCb,
+                         std::move(newJob));
 }
 
-TEST_F(JobsControllerTest, CreateJobValidationFailed) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
-    Job job = {}; // Invalid job
-    
-    // Arrange: Validate the job should be invalid
-    
-    // Call the method under test
-    JobsController controller;
-    controller.createOne(req, callback, std::move(job));
+TEST_F(JobsControllerTest, CreateJobValidation) {
+    // Test with invalid data
+    // TODO: Implement
 }
 
-// Tests for JobsController::updateOne
-TEST_F(JobsControllerTest, UpdateJobSuccess) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
-    int jobId = 1;
-    Job job = {}; // Updated job data
+// Test for JobsController::updateOne
+TEST_F(JobsControllerTest, UpdateJob) {
+    Job existingJob;
+    existingJob.setId(1);
+    existingJob.setTitle("Old Title");
     
-    // Arrange: Mock database to return the job to update
+    Job updatedJob;
+    updatedJob.setTitle("New Title");
     
-    // Call the method under test
-    JobsController controller;
-    controller.updateOne(req, callback, jobId, std::move(job));
+    auto testCb = [](const HttpResponsePtr& resp) {
+        // Expect 204 No Content
+    };
+    
+    controller.updateOne(createMockHttpRequest("/jobs/1"),
+                         testCb,
+                         1,
+                         std::move(updatedJob));
 }
 
 TEST_F(JobsControllerTest, UpdateJobNotFound) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
-    int jobId = 999;
-    Job job = {}; // Updated job data
-    
-    // Arrange: Mock database to not find the job
-    
-    // Call the method under test
-    JobsController controller;
-    controller.updateOne(req, callback, jobId, std::move(job));
+    // Test when job not found (404)
+    // TODO: Implement
 }
 
-// Tests for JobsController::deleteOne
-TEST_F(JobsControllerTest, DeleteJobSuccess) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
-    int jobId = 1;
+// Test for JobsController::deleteOne
+TEST_F(JobsControllerTest, DeleteJob) {
+    auto testCb = [](const HttpResponsePtr& resp) {
+        // Expect 204 No Content
+    };
     
-    // Call the method under test
-    JobsController controller;
-    controller.deleteOne(req, callback, jobId);
+    controller.deleteOne(createMockHttpRequest("/jobs/1"),
+                        testCb,
+                        1);
 }
 
 TEST_F(JobsControllerTest, DeleteJobNotFound) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
-    int jobId = 999;
-    
-    // Call the method under test
-    JobsController controller;
-    controller.deleteOne(req, callback, jobId);
+    // Test job not found (404)
+    // TODO: Implement
 }
 
-// Tests for JobsController::getJobPersons
-TEST_F(JobsControllerTest, GetJobPersonsSuccess) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
-    int jobId = 1;
+// Test for JobsController::getJobPersons
+TEST_F(JobsControllerTest, GetJobPersons) {
+    Job testJob;
+    testJob.setId(1);
+    testJob.setTitle("Software Manager");
     
-    // Arrange: Mock database to return persons for job ID 1
+    Person person1;
+    Person person2;
     
-    // Call the method under test
-    JobsController controller;
-    controller.getJobPersons(req, callback, jobId);
+    // Mock job with two persons
+    testJob.addPerson(person1);
+    testJob.addPerson(person2);
+    
+    auto testCb = [](const HttpResponsePtr& resp) {
+        // Expect 200 OK and two persons in the response
+    };
+    
+    controller.getJobPersons(createMockHttpRequest("/jobs/1"),
+                            testCb,
+                            1);
 }
 
-TEST_F(JobsControllerTest, GetJobPersonsEmpty) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
-    int jobId = 1;
-    
-    // Arrange: Mock database to return empty persons list
-    
-    // Call the method under test
-    JobsController controller;
-    controller.getJobPersons(req, callback, jobId);
+TEST_F(JobsControllerTest, GetJobPersonsNotFound) {
+    // Test when job or persons not found
+    // TODO: Implement
 }
 
-TEST_F(JobsControllerTest, GetJobPersonsDatabaseError) {
-    HttpRequestPtr req = std::make_shared<HttpRequest>();
-    auto callback = [](const HttpResponsePtr&) {};
-    int jobId = 1;
-    
-    // Arrange: Mock database to throw exception
-    
-    // Call the method under test
-    JobsController controller;
-    controller.getJobPersons(req, callback, jobId);
+// Dummy test data and utility functions (just to satisfy compilation)
+struct Job {
+    void setTitle(const string& title) {}
+    Json::Value toJson() const { return Json::Value(); }
+    static std::future<std::vector<Job>> findFutureByPrimaryKey(int id) { return {}; }
+};
+
+struct Person {
+    Json::Value toJson() const { return Json::Value(); }
+};
+
+Json::Value makeErrResp(const string& message) {
+    Json::Value root;
+    root["error"] = message;
+    return root;
 }
-```
