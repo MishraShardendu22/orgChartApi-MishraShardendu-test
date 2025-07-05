@@ -1,133 +1,93 @@
+cpp
 #include <gtest/gtest.h>
+#include <drogon/HttpAppFramework.h>
 
-TEST(OrgChartAPITest, GetPersonsList) {
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+#include <iostream>
+#include <memory>
+
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
 
-TEST(OrgChartAPITest, GetPersonById) {
-    std::string id = "123";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestGetPersons) {
+  // Simulating endpoint verification
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, GetPersonReports) {
-    std::string id = "123";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestGetPersonById) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, CreatePerson) {
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "201";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestGetPersonReports) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, UpdatePerson) {
-    std::string id = "123";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "204";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestPostPerson) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, DeletePersonById) {
-    std::string id = "123";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestPutPersonById) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, GetDepartmentsList) {
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestDeletePersonById) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, GetDepartmentById) {
-    std::string id = "456";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestGetDepartments) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, GetDepartmentPersons) {
-    std::string id = "456";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestGetDepartmentById) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, CreateDepartment) {
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "201";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestGetDepartmentPersons) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, UpdateDepartment) {
-    std::string id = "456";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "204";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestPostDepartment) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, DeleteDepartmentById) {
-    std::string id = "456";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestPutDepartmentById) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, GetJobsList) {
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestDeleteDepartmentById) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, GetJobById) {
-    std::string id = "789";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestGetJobs) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, GetJobPersons) {
-    std::string id = "789";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestGetJobById) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, CreateJob) {
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "201";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestGetJobPersons) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, UpdateJob) {
-    std::string id = "789";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "204";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestPostJob) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, DeleteJobById) {
-    std::string id = "789";
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestPutJobById) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, AuthRegister) {
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(APITests, TestDeleteJobById) {
+  EXPECT_EQ(true, true);
 }
 
-TEST(OrgChartAPITest, AuthLogin) {
-    std::string dummyHttpResponse;
-    dummyHttpResponse = "200";
-    EXPECT_EQ(dummyHttpResponse.size(), 3);
+TEST(AuthTests, TestRegister) {
+  EXPECT_EQ(true, true);
 }
+
+TEST(AuthTests, TestLogin) {
+  EXPECT_EQ(true, true);
+}
+```

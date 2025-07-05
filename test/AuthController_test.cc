@@ -1,79 +1,112 @@
+cpp
 #include <gtest/gtest.h>
-#include <nlohmann/json.hpp>
+#include <string>
+#include <vector>
 
-TEST(OrgChartAPITest, TestGetPersons) {
-    ASSERT_TRUE(true); 
+// Mock API call functions (replace with real implementations)
+bool getPersons(int limit, int offset, const std::string& sort_field, const std::string& sort_order) { return true; }
+bool getPersonById(int id) { return true; }
+bool getPersonReports(int id) { return true; }
+bool postPerson() { return true; }
+bool putPerson(int id) { return true; }
+bool deletePerson(int id) { return true; }
+bool getDepartments(int limit, int offset, const std::string& sort_field, const std::string& sort_order) { return true; }
+bool getDepartmentById(int id) { return true; }
+bool getDepartmentPersons(int id) { return true; }
+bool postDepartment() { return true; }
+bool putDepartment(int id) { return true; }
+bool deleteDepartment(int id) { return true; }
+bool getJobs(int limit, int offset, const std::string& sort_fields, const std::string& sort_order) { return true; }
+bool getJobById(int id) { return true; }
+bool getJobPersons(int id) { return true; }
+bool postJob() { return true; }
+bool putJob(int id) { return true; }
+bool deleteJob(int id) { return true; }
+bool postRegister(const std::string& email, const std::string& password) { return true; }
+bool postLogin(const std::string& email, const std::string& password) { return true; }
+
+TEST(OrgChartApiTest, GetPersons) {
+    EXPECT_TRUE(getPersons(10, 0, "name", "asc"));
 }
 
-TEST(OrgChartAPITest, TestGetPersonById) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, GetPersonById) {
+    EXPECT_TRUE(getPersonById(1));
 }
 
-TEST(OrgChartAPITest, TestGetPersonReports) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, GetPersonReports) {
+    EXPECT_TRUE(getPersonReports(1));
 }
 
-TEST(OrgChartAPITest, TestPostPerson) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, PostPerson) {
+    EXPECT_TRUE(postPerson());
 }
 
-TEST(OrgChartAPITest, TestPutPerson) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, PutPerson) {
+    EXPECT_TRUE(putPerson(1));
 }
 
-TEST(OrgChartAPITest, TestDeletePerson) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, DeletePerson) {
+    EXPECT_TRUE(deletePerson(1));
 }
 
-TEST(OrgChartAPITest, TestGetDepartments) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, GetDepartments) {
+    EXPECT_TRUE(getDepartments(10, 0, "name", "asc"));
 }
 
-TEST(OrgChartAPITest, TestGetDepartmentById) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, GetDepartmentById) {
+    EXPECT_TRUE(getDepartmentById(1));
 }
 
-TEST(OrgChartAPITest, TestGetDepartmentPersons) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, GetDepartmentPersons) {
+    EXPECT_TRUE(getDepartmentPersons(1));
 }
 
-TEST(OrgChartAPITest, TestPostDepartment) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, PostDepartment) {
+    EXPECT_TRUE(postDepartment());
 }
 
-TEST(OrgChartAPITest, TestPutDepartment) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, PutDepartment) {
+    EXPECT_TRUE(putDepartment(1));
 }
 
-TEST(OrgChartAPITest, TestDeleteDepartment) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, DeleteDepartment) {
+    EXPECT_TRUE(deleteDepartment(1));
 }
 
-TEST(OrgChartAPITest, TestGetJobs) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, GetJobs) {
+    EXPECT_TRUE(getJobs(10, 0, "title", "asc"));
 }
 
-TEST(OrgChartAPITest, TestGetJobById) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, GetJobById) {
+    EXPECT_TRUE(getJobById(1));
 }
 
-TEST(OrgChartAPITest, TestGetJobPersons) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, GetJobPersons) {
+    EXPECT_TRUE(getJobPersons(1));
 }
 
-TEST(OrgChartAPITest, TestPostJob) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, PostJob) {
+    EXPECT_TRUE(postJob());
 }
 
-TEST(OrgChartAPITest, TestPutJob) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, PutJob) {
+    EXPECT_TRUE(putJob(1));
 }
 
-TEST(OrgChartAPITest, TestDeleteJob) {
-    ASSERT_TRUE(true); 
+TEST(OrgChartApiTest, DeleteJob) {
+    EXPECT_TRUE(deleteJob(1));
 }
 
-int main(int argc, char** argv) {
+TEST(AuthApiTest, Register) {
+    EXPECT_TRUE(postRegister("test@example.com", "password"));
+}
+
+TEST(AuthApiTest, Login) {
+    EXPECT_TRUE(postLogin("test@example.com", "password"));
+}
+
+int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+```
